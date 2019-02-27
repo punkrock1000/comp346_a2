@@ -100,7 +100,7 @@ class BlockStack
 	{
 		this.acStack[++this.iTop] = pcBlock;
 		this.accessCounter++;
-		System.out.println("An element has successfully been pushed to the stack.");
+		System.out.println("Element " + pcBlock + " has successfully been pushed to the stack.");
 	}
 
 	/**
@@ -112,7 +112,7 @@ class BlockStack
 		char cBlock = this.acStack[this.iTop];
 		this.acStack[this.iTop--] = '*'; // Leave prev. value undefined
 		this.accessCounter++;
-		System.out.println("An element has successfully been popped (removed) from the stack.");
+		System.out.println("Element " + cBlock + " has successfully been popped (removed) from the stack.");
 		return cBlock;
 	}
 
