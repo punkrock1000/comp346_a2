@@ -57,7 +57,7 @@ public class BlockManager
 		{
 			// Some initial stats...
 			System.out.println("Main thread starts executing.");
-			System.out.println("Initial value of top = " + soStack.getTop() + ".");
+			System.out.println("Initial value of top = " + soStack.getITop() + ".");
 			System.out.println("Initial value of stack top = " + soStack.pick() + ".");
 			System.out.println("Main thread will now fork several threads.");
 
@@ -117,9 +117,9 @@ public class BlockManager
 
 			// Some final stats after all the child threads terminated...
 			System.out.println("System terminates normally.");
-			System.out.println("Final value of top = " + soStack.getTop() + ".");
+			System.out.println("Final value of top = " + soStack.getITop() + ".");
 			System.out.println("Final value of stack top = " + soStack.pick() + ".");
-			System.out.println("Final value of stack top-1 = " + soStack.getAt(soStack.getTop() - 1) + ".");
+			System.out.println("Final value of stack top-1 = " + soStack.getAt(soStack.getITop() - 1) + ".");
 			System.out.println("Stack access count = " + soStack.getAccessCounter());
 
 			System.exit(0);
@@ -147,7 +147,7 @@ public class BlockManager
 	{
 		/**
 		 * A copy of a block returned by pop().
-                 * @see BlocStack#pop()
+                 * @see BlockStack#pop()
 		 */
 		private char cCopy;
 
@@ -168,14 +168,14 @@ public class BlockManager
 				System.out.println
 				(
 					"AcquireBlock thread [TID=" + this.iTID + "] has obtained Ms block " + this.cCopy +
-					" from position " + (soStack.getTop() + 1) + "."
+					" from position " + (soStack.getITop() + 1) + "."
 				);
 
 
 				System.out.println
 				(
 					"Acq[TID=" + this.iTID + "]: Current value of top = " +
-					soStack.getTop() + "."
+					soStack.getITop() + "."
 				);
 
 				System.out.println
@@ -225,7 +225,7 @@ public class BlockManager
 				System.out.println
 				(
 					"ReleaseBlock thread [TID=" + this.iTID + "] returns Ms block " + this.cBlock +
-					" to position " + (soStack.getTop() + 1) + "."
+					" to position " + (soStack.getITop() + 1) + "."
 				);
 
 				soStack.push(this.cBlock);
@@ -233,7 +233,7 @@ public class BlockManager
 				System.out.println
 				(
 					"Rel[TID=" + this.iTID + "]: Current value of top = " +
-					soStack.getTop() + "."
+					soStack.getITop() + "."
 				);
 
 				System.out.println
@@ -275,12 +275,12 @@ public class BlockManager
 
 					// [s] - means ordinay slot of a stack
 					// (s) - current top of the stack
-					for(int s = 0; s < soStack.getSize(); s++)
+					for(int s = 0; s < soStack.getISize(); s++)
 						System.out.print
 						(
-							(s == BlockManager.soStack.getTop() ? "(" : "[") +
+							(s == BlockManager.soStack.getITop() ? "(" : "[") +
 							BlockManager.soStack.getAt(s) +
-							(s == BlockManager.soStack.getTop() ? ")" : "]")
+							(s == BlockManager.soStack.getITop() ? ")" : "]")
 						);
 
 					System.out.println(".");

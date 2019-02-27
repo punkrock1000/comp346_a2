@@ -34,7 +34,14 @@ class BlockStack
 	/**
 	 * stack[0:5] with four defined values
 	 */
-	public char acStack[] = new char[] {'a', 'b', 'c', 'd', '$', '$'};
+	public char acStack[] = new char[] {'a', 'b', 'c', 'd', '*', '*'};
+
+	/**
+	 * Number of times the stack has been accessed since
+	 * the program has started execution
+	 * (Incremented by 1 every single time the stack is accessed)
+	 */
+	private int accessCounter = 0;
 
 	/**
 	 * Default constructor
@@ -59,7 +66,7 @@ class BlockStack
 			for(int i = 0; i < piSize - 2; i++)
 				this.acStack[i] = (char)('a' + i);
 
-			this.acStack[piSize - 2] = this.acStack[piSize - 1] = '$';
+			this.acStack[piSize - 2] = this.acStack[piSize - 1] = '*';
 
 			this.iTop = piSize - 3;
                         this.iSize = piSize;
@@ -72,6 +79,7 @@ class BlockStack
 	 */
 	public char pick()
 	{
+		this.accessCounter++;
 		return this.acStack[this.iTop];
 	}
 
@@ -81,6 +89,7 @@ class BlockStack
 	 */
 	public char getAt(final int piPosition)
 	{
+		this.accessCounter++;
 		return this.acStack[piPosition];
 	}
 
@@ -90,6 +99,8 @@ class BlockStack
 	public void push(final char pcBlock)
 	{
 		this.acStack[++this.iTop] = pcBlock;
+		this.accessCounter++;
+		System.out.println("An element has successfully been pushed to the stack.");
 	}
 
 	/**
@@ -99,8 +110,35 @@ class BlockStack
 	public char pop()
 	{
 		char cBlock = this.acStack[this.iTop];
-		this.acStack[this.iTop--] = '$'; // Leave prev. value undefined
+		this.acStack[this.iTop--] = '*'; // Leave prev. value undefined
+		this.accessCounter++;
+		System.out.println("An element has successfully been popped (removed) from the stack.");
 		return cBlock;
+	}
+
+	/**
+	 * We use variable iTop to determine the emptiness of the stack.
+	 * @return whether or not the stack is empty
+	 */
+	public boolean isEmpty()
+	{
+		return this.iTop == -1;
+	}
+
+	/*------- Accessor Methods -------*/
+	public int getITop()
+	{
+		return iTop;
+	}
+
+	public int getISize()
+	{
+		return iSize;
+	}
+
+	public int getAccessCounter()
+	{
+		return accessCounter;
 	}
 }
 
