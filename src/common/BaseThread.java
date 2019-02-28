@@ -120,7 +120,7 @@ public class BaseThread extends Thread
 	}
 
 	/**
-	 * Just a make up for the PHASE II to make it somewhat tangeable.
+	 * Just a make up for the PHASE II to make it somewhat tangible.
          * Must be atomic as it touches siTurn and siNextTID.
 	 */
 	protected synchronized void phase2()

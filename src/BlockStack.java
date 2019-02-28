@@ -59,7 +59,9 @@ class BlockStack
 	public BlockStack(final int piSize)
         throws InvalidStackSizeException
 	{
-	    if (piSize < 0 || piSize > MAX_SIZE)
+		// The minimum pSize is 2 instead of 0, because we decided in our implementation of the stack
+		// that there should always be at least 2 free blocks on initialization.
+	    if (piSize < 2 || piSize > MAX_SIZE)
 	        throw new InvalidStackSizeException();
 		if(piSize != DEFAULT_SIZE)
 		{

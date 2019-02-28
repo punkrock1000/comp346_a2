@@ -38,17 +38,32 @@ public class BlockManager
 
 	/**
 	 * For phase 1, we need to know how many threads will be created.
+	 * There are 3 types of threads: AcquireBlock, ReleaseBlock and CharStackProber threads,
+	 * who all derive from common/BaseThread, which itself is a class deriving from the Java Thread class.
+	 * Thus, we need to count the total number of threads, which is the sum of the number of threads of each class.
+	 * In our case, 3 + 3 + 4 = 10 threads in execution.
 	 */
 	private static final int NUM_ACQUIRE_BLOCK_THREADS = 3;
 	private static final int NUM_RELEASE_BLOCK_THREADS = 3;
-	private static int nbrTotalThreads = NUM_ACQUIRE_BLOCK_THREADS + NUM_RELEASE_BLOCK_THREADS + NUM_PROBERS;
+	private static int nbrTotalThreads = NUM_ACQUIRE_BLOCK_THREADS + NUM_RELEASE_BLOCK_THREADS + NUM_PROBERS; // = 10 threads
+
+	/*
+	 * To indicate to the user that all threads have finished executing phase 1 and are ready to execute phase 2.
+	 */
+	private static boolean phase1FullyCompleted = false;
 
 	/*
 	 * For synchronization
 	 */
 
 	/**
-	 * s1 is to make sure phase I for all is done before any phase II begins
+	 * Semaphore s1 is necessary to make sure that all threads have finished executing their phase I
+	 * before phase II starts executing for any threads.
+	 * To ensure that, we initialize s1 to the negative value of the total number of threads incremented by 1.
+	 * Thus, all threads will subsequently be forced to wait until the value of s1 becomes positive,
+	 * which will only happen when all threads have finished executing Phase 1.
+	 * In that way, as soon as the last thread (10th one here) has finished executing Phase 1,
+	 * the value of s1 will be 1, allowing any thread to enter/start executing phase 2.
 	 */
 	private static Semaphore s1 = new Semaphore(-nbrTotalThreads + 1);
 
@@ -171,15 +186,26 @@ public class BlockManager
 
 		public void run()
 		{
-			// When acquiring block, only one thread should be operational at a time, thus we need to acquire the mutex.
-			// This is because we execute operations on the stack, which should be mutually exclusive.
-			// (Since the stack is a critical section.)
+			// When executing Phase 1, only one thread should be operational at a time, thus we need to acquire the mutex.
+			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
+			// This is because we execute operations on the stack, which is a critical section.
 		    mutex.P();
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] starts executing.");
 
 
 			phase1();
+			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
+			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
+			// Phase 2 right until the moment the very last remaining thread (in this case thread 10th) finishes
+			// Phase 1 and arrives to the following line, when the value of s1 will become 1.
 			s1.V();
+
+			// Once the very last thread (in our case the 10th one) finishes executing Phase 1, it should unlock the
+			// semaphore s1. The following conditional checks for that and notifies the user of such accomplishment.
+			if (!s1.isLocked())
+			{
+				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads + " threads have finished executing Phase 1 successfully!!!");
+			}
 
 			try
 			{
@@ -221,10 +247,16 @@ public class BlockManager
 			    mutex.V();
             }
 
+			// The following line forces all threads to wait until every single thread has finished executing Phase 1
+			// before starting to execute Phase 2. Phase 2 will only be able to be executed once the value of s1
+			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
+			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
+			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
+			// the Phase 2 operations and thus prevent race condition.
+			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			s1.V();
 			phase2();
-
+			s1.V();
 
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] terminates.");
 		}
@@ -243,15 +275,26 @@ public class BlockManager
 
 		public void run()
 		{
-			// When releasing block, only one thread should be operational at a time, thus we need to acquire the mutex.
-			// This is because we execute operations on the stack, which should be mutually exclusive.
-			// (Since the stack is a critical section.)
+			// When executing Phase 1, only one thread should be operational at a time, thus we need to acquire the mutex.
+			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
+			// This is because we execute operations on the stack, which is a critical section.
 			mutex.P();
 			System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] starts executing.");
 
 
 			phase1();
+			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
+			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
+			// Phase 2 right until the moment the very last remaining thread (in this case thread 10th) finishes
+			// Phase 1 and arrives to the following line, when the value of s1 will become 1.
 			s1.V();
+
+			// Once the very last thread (in our case the 10th one) finishes executing Phase 1, it should unlock the
+			// semaphore s1. The following conditional checks for that and notifies the user of such accomplishment.
+			if (!s1.isLocked())
+			{
+				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads + " threads have finished executing Phase 1 successfully!!!");
+			}
 
 			try
 			{
@@ -299,9 +342,16 @@ public class BlockManager
 				mutex.V();
 			}
 
+			// The following line forces all threads to wait until every single thread has finished executing Phase 1
+			// before starting to execute Phase 2. Phase 2 will only be able to be executed once the value of s1
+			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
+			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
+			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
+			// the Phase 2 operations and thus prevent race condition.
+			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			s1.V();
 			phase2();
+			s1.V();
 
 
 			System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] terminates.");
@@ -316,12 +366,28 @@ public class BlockManager
 	{
 		public void run()
 		{
+			// When executing Phase 1, only one thread should be operational at a time, thus we need to acquire the mutex.
+			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
+			// This is because we execute operations on the stack, which is a critical section.
+			mutex.P();
+
 			// When dumping stack contents,
 			// only one thread should be operational at a time, thus we need to acquire the mutex.
 			// This is because we execute operations on the stack, which should be mutually exclusive.
 			// (Since the stack is a critical section.)
 			phase1();
+
+			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
+			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
+			// Phase 2 right until the moment the very last remaining thread (in this case thread 10th) finishes
+			// Phase 1 and arrives to the following line, when the value of s1 will become 1.
 			s1.V();
+			// Once the very last thread (in our case the 10th one) finishes executing Phase 1, it should unlock the
+			// semaphore s1. The following conditional checks for that and notifies the user of such accomplishment.
+			if (!s1.isLocked())
+			{
+				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads + " threads have finished executing Phase 1 successfully!!!");
+			}
 
 			try
 			{
@@ -358,9 +424,16 @@ public class BlockManager
 				mutex.V();
 			}
 
+			// The following line forces all threads to wait until every single thread has finished executing Phase 1
+			// before starting to execute Phase 2. Phase 2 will only be able to be executed once the value of s1
+			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
+			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
+			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
+			// the Phase 2 operations and thus prevent race condition.
+			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			s1.V();
 			phase2();
+			s1.V();
 
 		}
 	} // class CharStackProber
