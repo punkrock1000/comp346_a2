@@ -1,5 +1,7 @@
 // Import (aka include) some stuff.
 import common.*;
+import org.omg.CORBA.DynAnyPackage.Invalid;
+import sun.invoke.empty.Empty;
 
 /**
  * Class BlockManager
@@ -53,77 +55,86 @@ public class BlockManager
 	// The main()
 	public static void main(String[] argv)
 	{
-		try
-		{
-			// Some initial stats...
-			System.out.println("Main thread starts executing.");
-			System.out.println("Initial value of top = " + soStack.getITop() + ".");
-			System.out.println("Initial value of stack top = " + soStack.pick() + ".");
-			System.out.println("Main thread will now fork several threads.");
+		try {
+            // Some initial stats...
+            System.out.println("Main thread starts executing.");
+            System.out.println("Initial value of top = " + soStack.getITop() + ".");
+            System.out.println("Initial value of stack top = " + soStack.pick() + ".");
+            System.out.println("Main thread will now fork several threads.");
 
-			/*
-			 * The birth of threads
-			 */
-			AcquireBlock ab1 = new AcquireBlock();
-			AcquireBlock ab2 = new AcquireBlock();
-			AcquireBlock ab3 = new AcquireBlock();
+            /*
+             * The birth of threads
+             */
+            AcquireBlock ab1 = new AcquireBlock();
+            AcquireBlock ab2 = new AcquireBlock();
+            AcquireBlock ab3 = new AcquireBlock();
 
-			System.out.println("main(): Three AcquireBlock threads have been created.");
+            System.out.println("main(): Three AcquireBlock threads have been created.");
 
-			ReleaseBlock rb1 = new ReleaseBlock();
-			ReleaseBlock rb2 = new ReleaseBlock();
-			ReleaseBlock rb3 = new ReleaseBlock();
+            ReleaseBlock rb1 = new ReleaseBlock();
+            ReleaseBlock rb2 = new ReleaseBlock();
+            ReleaseBlock rb3 = new ReleaseBlock();
 
-			System.out.println("main(): Three ReleaseBlock threads have been created.");
+            System.out.println("main(): Three ReleaseBlock threads have been created.");
 
-			// Create an array object first
-			CharStackProber	aStackProbers[] = new CharStackProber[NUM_PROBERS];
+            // Create an array object first
+            CharStackProber aStackProbers[] = new CharStackProber[NUM_PROBERS];
 
-			// Then the CharStackProber objects
-			for(int i = 0; i < NUM_PROBERS; i++)
-				aStackProbers[i] = new CharStackProber();
+            // Then the CharStackProber objects
+            for (int i = 0; i < NUM_PROBERS; i++)
+                aStackProbers[i] = new CharStackProber();
 
-			System.out.println("main(): CharStackProber threads have been created: " + NUM_PROBERS);
+            System.out.println("main(): CharStackProber threads have been created: " + NUM_PROBERS);
 
-			/*
-			 * Twist 'em all
-			 */
-			ab1.start();
-			aStackProbers[0].start();
-			rb1.start();
-			aStackProbers[1].start();
-			ab2.start();
-			aStackProbers[2].start();
-			rb2.start();
-			ab3.start();
-			aStackProbers[3].start();
-			rb3.start();
+            /*
+             * Twist 'em all
+             */
+            ab1.start();
+            aStackProbers[0].start();
+            rb1.start();
+            aStackProbers[1].start();
+            ab2.start();
+            aStackProbers[2].start();
+            rb2.start();
+            ab3.start();
+            aStackProbers[3].start();
+            rb3.start();
 
-			System.out.println("main(): All the threads are ready.");
+            System.out.println("main(): All the threads are ready.");
 
-			/*
-			 * Wait by here for all forked threads to die
-			 */
-			ab1.join();
-			ab2.join();
-			ab3.join();
+            /*
+             * Wait by here for all forked threads to die
+             */
+            ab1.join();
+            ab2.join();
+            ab3.join();
 
-			rb1.join();
-			rb2.join();
-			rb3.join();
+            rb1.join();
+            rb2.join();
+            rb3.join();
 
-			for(int i = 0; i < NUM_PROBERS; i++)
-				aStackProbers[i].join();
+            for (int i = 0; i < NUM_PROBERS; i++)
+                aStackProbers[i].join();
 
-			// Some final stats after all the child threads terminated...
-			System.out.println("System terminates normally.");
-			System.out.println("Final value of top = " + soStack.getITop() + ".");
-			System.out.println("Final value of stack top = " + soStack.pick() + ".");
-			System.out.println("Final value of stack top-1 = " + soStack.getAt(soStack.getITop() - 1) + ".");
-			System.out.println("Stack access count = " + soStack.getAccessCounter());
+            // Some final stats after all the child threads terminated...
+            System.out.println("System terminates normally.");
+            System.out.println("Final value of top = " + soStack.getITop() + ".");
+            System.out.println("Final value of stack top = " + soStack.pick() + ".");
+            System.out.println("Final value of stack top-1 = " + soStack.getAt(soStack.getITop() - 1) + ".");
+            System.out.println("Stack access count = " + soStack.getAccessCounter());
 
-			System.exit(0);
-		}
+            System.exit(0);
+        }
+		catch(EmptyStackException e)
+        {
+            System.err.println("Caught EmptyStackException: " + e.getMessage());
+            System.exit(1);
+        }
+		catch(OutOfBoundsStackIndexException e)
+        {
+            System.err.println("Caught OutOfBoundsStackIndexException: " + e.getMessage());
+            System.exit(1);
+        }
 		catch(InterruptedException e)
 		{
 			System.err.println("Caught InterruptedException (internal error): " + e.getMessage());
@@ -184,6 +195,11 @@ public class BlockManager
 					soStack.pick() + "."
 				);
 			}
+			catch(EmptyStackException e)
+            {
+                System.err.println("Caught EmptyStackException: " + e.getMessage());
+                System.exit(1);
+            }
 			catch(Exception e)
 			{
 				reportException(e);
@@ -242,6 +258,16 @@ public class BlockManager
 					soStack.pick() + "."
 				);
 			}
+            catch(FullStackException e)
+            {
+                System.err.println("Caught FullStackException: " + e.getMessage());
+                System.exit(1);
+            }
+			catch(EmptyStackException e)
+            {
+                System.err.println("Caught EmptyStackException: " + e.getMessage());
+                System.exit(1);
+            }
 			catch(Exception e)
 			{
 				reportException(e);
@@ -287,6 +313,11 @@ public class BlockManager
 
 				}
 			}
+            catch(OutOfBoundsStackIndexException e)
+            {
+                System.err.println("Caught OutOfBoundsStackIndexException: " + e.getMessage());
+                System.exit(1);
+            }
 			catch(Exception e)
 			{
 				reportException(e);
