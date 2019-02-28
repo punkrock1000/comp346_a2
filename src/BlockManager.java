@@ -76,7 +76,7 @@ public class BlockManager
 	 * s2 is for use in conjunction with Thread.turnTestAndSet() for phase II proceed
 	 * in the thread creation order
 	 */
-	//private static Semaphore s2 = new Semaphore(...);
+	private static Semaphore s2 = new Semaphore(1);
 
 
 	// The main()
@@ -268,13 +268,23 @@ public class BlockManager
 			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
 			// Phase 2 will only be able to be executed once the value of s1 becomes strictly positive.
 			// Once that happens, all threads should be able to start executing Phase 2.
-			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
-			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
-			// the Phase 2 operations and thus prevent race condition.
-			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			phase2();
 			s1.V();
+
+			// Now that we know for sure that all threads have executed Phase 1, we need to make sure the threads
+			// execute Phase 2 in the order of their TID (ascending order).
+			// To do that, they repeatedly check whether or not it is their turn to execute Phase 2.
+			// When their TID corresponds to the next thread to execute, they acquire the semaphore s2, execute Phase 2
+			// and release s2 once they are done executing Phase 2, letting other threads the chance to execute their
+			// respective Phase 2.
+			while (!this.turnTestAndSet())
+			{
+				System.out.println("AcquireBlock thread [TID=" + this.iTID + "] tried to acquire semaphore " +
+						"to start executing Phase 2 but it is not its turn yet.");
+			}
+			s2.P();
+			phase2();
+			s2.V();
 
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] terminates.");
 		}
@@ -376,13 +386,23 @@ public class BlockManager
 			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
 			// Phase 2 will only be able to be executed once the value of s1 becomes strictly positive.
 			// Once that happens, all threads should be able to start executing Phase 2.
-			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
-			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
-			// the Phase 2 operations and thus prevent race condition.
-			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			phase2();
 			s1.V();
+
+			// Now that we know for sure that all threads have executed Phase 1, we need to make sure the threads
+			// execute Phase 2 in the order of their TID (ascending order).
+			// To do that, they repeatedly check whether or not it is their turn to execute Phase 2.
+			// When their TID corresponds to the next thread to execute, they acquire the semaphore s2, execute Phase 2
+			// and release s2 once they are done executing Phase 2, letting other threads the chance to execute their
+			// respective Phase 2.
+			while (!this.turnTestAndSet())
+			{
+				System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] tried to acquire semaphore " +
+						"to start executing Phase 2 but it is not its turn yet.");
+			}
+			s2.P();
+			phase2();
+			s2.V();
 
 			System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] terminates.");
 		}
@@ -465,13 +485,23 @@ public class BlockManager
 			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
 			// Phase 2 will only be able to be executed once the value of s1 becomes strictly positive.
 			// Once that happens, all threads should be able to start executing Phase 2.
-			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
-			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
-			// the Phase 2 operations and thus prevent race condition.
-			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			phase2();
 			s1.V();
+
+			// Now that we know for sure that all threads have executed Phase 1, we need to make sure the threads
+			// execute Phase 2 in the order of their TID (ascending order).
+			// To do that, they repeatedly check whether or not it is their turn to execute Phase 2.
+			// When their TID corresponds to the next thread to execute, they acquire the semaphore s2, execute Phase 2
+			// and release s2 once they are done executing Phase 2, letting other threads the chance to execute their
+			// respective Phase 2.
+			while (!this.turnTestAndSet())
+			{
+				System.out.println("Stack Prober [TID=" + this.iTID + "] tried to acquire semaphore " +
+						"to start executing Phase 2 but it is not its turn yet.");
+			}
+			s2.P();
+			phase2();
+			s2.V();
 		}
 	} // class CharStackProber
 
