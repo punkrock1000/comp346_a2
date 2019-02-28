@@ -57,12 +57,12 @@ class BlockStack
 	 * @throws InvalidStackSizeException
 	 */
 	public BlockStack(final int piSize)
-        throws InvalidStackSizeException
+			throws InvalidStackSizeException
 	{
 		// The minimum pSize is 2 instead of 0, because we decided in our implementation of the stack
 		// that there should always be at least 2 free blocks on initialization.
-	    if (piSize < 2 || piSize > MAX_SIZE)
-	        throw new InvalidStackSizeException();
+		if (piSize < 2 || piSize > MAX_SIZE)
+			throw new InvalidStackSizeException();
 		if(piSize != DEFAULT_SIZE)
 		{
 			this.acStack = new char[piSize];
@@ -85,7 +85,7 @@ class BlockStack
 	 * @throws EmptyStackException
 	 */
 	public char pick()
-		throws EmptyStackException
+			throws EmptyStackException
 	{
 		if (this.isEmpty())
 			throw new EmptyStackException();
@@ -99,7 +99,7 @@ class BlockStack
 	 * @throws OutOfBoundsStackIndexException
 	 */
 	public char getAt(final int piPosition)
-		throws OutOfBoundsStackIndexException
+			throws OutOfBoundsStackIndexException
 	{
 		if (piPosition < 0 || piPosition >= this.iSize)
 			throw new OutOfBoundsStackIndexException();
@@ -112,16 +112,16 @@ class BlockStack
 	 * @throws EmptyStackException
 	 */
 	public void push(final char pcBlock)
-        throws FullStackException
-    {
-        if (this.isFull())
-            throw new FullStackException();
-        if (this.isEmpty()) {
-            this.acStack[++this.iTop] = 'a';
-        }
-	    else {
-            this.acStack[++this.iTop] = pcBlock;
-        }
+			throws FullStackException
+	{
+		if (this.isFull())
+			throw new FullStackException();
+		if (this.isEmpty()) {
+			this.acStack[++this.iTop] = 'a';
+		}
+		else {
+			this.acStack[++this.iTop] = pcBlock;
+		}
 		this.accessCounter++;
 		System.out.println("Element " + pcBlock + " has successfully been pushed to the stack.");
 	}
@@ -132,10 +132,10 @@ class BlockStack
 	 * @throws EmptyStackException
 	 */
 	public char pop()
-        throws EmptyStackException
+			throws EmptyStackException
 	{
-	    if (this.isEmpty())
-	        throw new EmptyStackException();
+		if (this.isEmpty())
+			throw new EmptyStackException();
 		char cBlock = this.acStack[this.iTop];
 		this.acStack[this.iTop--] = '*'; // Leave prev. value undefined
 		this.accessCounter++;
@@ -152,14 +152,14 @@ class BlockStack
 		return this.iTop == -1;
 	}
 
-    /**
-     * We use variable iTop to determine the fullness of the stack relative to iSize.
-     * @return whether or not the stack is full
-     */
-    public boolean isFull()
-    {
-        return this.iTop == this.iSize;
-    }
+	/**
+	 * We use variable iTop to determine the fullness of the stack relative to iSize.
+	 * @return whether or not the stack is full
+	 */
+	public boolean isFull()
+	{
+		return this.iTop == this.iSize;
+	}
 
 	/*------- Accessor Methods -------*/
 	/**
@@ -201,14 +201,14 @@ class BlockStack
  */
 class EmptyStackException extends Exception
 {
-    public EmptyStackException()
-    {
-        super("Empty Stack !!!");
-    }
-    public EmptyStackException(String message)
-    {
-        super(message);
-    }
+	public EmptyStackException()
+	{
+		super("Empty Stack !!!");
+	}
+	public EmptyStackException(String message)
+	{
+		super(message);
+	}
 }
 
 /**
@@ -217,14 +217,14 @@ class EmptyStackException extends Exception
  */
 class FullStackException extends Exception
 {
-    public FullStackException()
-    {
-        super("Full Stack !!!");
-    }
-    public FullStackException(String message)
-    {
-        super(message);
-    }
+	public FullStackException()
+	{
+		super("Full Stack !!!");
+	}
+	public FullStackException(String message)
+	{
+		super(message);
+	}
 }
 
 /**
@@ -233,14 +233,14 @@ class FullStackException extends Exception
  */
 class InvalidStackSizeException extends Exception
 {
-    public InvalidStackSizeException()
-    {
-        super("Invalid Stack Size !!!");
-    }
-    public InvalidStackSizeException(String message)
-    {
-        super(message);
-    }
+	public InvalidStackSizeException()
+	{
+		super("Invalid Stack Size !!!");
+	}
+	public InvalidStackSizeException(String message)
+	{
+		super(message);
+	}
 }
 
 /**

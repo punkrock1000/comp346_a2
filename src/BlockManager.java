@@ -78,85 +78,85 @@ public class BlockManager
 	public static void main(String[] argv)
 	{
 		try {
-            // Some initial stats...
-            System.out.println("Main thread starts executing.");
-            System.out.println("Initial value of top = " + soStack.getITop() + ".");
-            System.out.println("Initial value of stack top = " + soStack.pick() + ".");
-            System.out.println("Main thread will now fork several threads.");
+			// Some initial stats...
+			System.out.println("Main thread starts executing.");
+			System.out.println("Initial value of top = " + soStack.getITop() + ".");
+			System.out.println("Initial value of stack top = " + soStack.pick() + ".");
+			System.out.println("Main thread will now fork several threads.");
 
-            /*
-             * The birth of threads
-             */
-            AcquireBlock ab1 = new AcquireBlock();
-            AcquireBlock ab2 = new AcquireBlock();
-            AcquireBlock ab3 = new AcquireBlock();
+			/*
+			 * The birth of threads
+			 */
+			AcquireBlock ab1 = new AcquireBlock();
+			AcquireBlock ab2 = new AcquireBlock();
+			AcquireBlock ab3 = new AcquireBlock();
 
-            System.out.println("main(): Three AcquireBlock threads have been created.");
+			System.out.println("main(): Three AcquireBlock threads have been created.");
 
-            ReleaseBlock rb1 = new ReleaseBlock();
-            ReleaseBlock rb2 = new ReleaseBlock();
-            ReleaseBlock rb3 = new ReleaseBlock();
+			ReleaseBlock rb1 = new ReleaseBlock();
+			ReleaseBlock rb2 = new ReleaseBlock();
+			ReleaseBlock rb3 = new ReleaseBlock();
 
-            System.out.println("main(): Three ReleaseBlock threads have been created.");
+			System.out.println("main(): Three ReleaseBlock threads have been created.");
 
-            // Create an array object first
-            CharStackProber aStackProbers[] = new CharStackProber[NUM_PROBERS];
+			// Create an array object first
+			CharStackProber aStackProbers[] = new CharStackProber[NUM_PROBERS];
 
-            // Then the CharStackProber objects
-            for (int i = 0; i < NUM_PROBERS; i++)
-                aStackProbers[i] = new CharStackProber();
+			// Then the CharStackProber objects
+			for (int i = 0; i < NUM_PROBERS; i++)
+				aStackProbers[i] = new CharStackProber();
 
-            System.out.println("main(): CharStackProber threads have been created: " + NUM_PROBERS);
+			System.out.println("main(): CharStackProber threads have been created: " + NUM_PROBERS);
 
-            /*
-             * Twist 'em all
-             */
-            ab1.start();
-            aStackProbers[0].start();
-            rb1.start();
-            aStackProbers[1].start();
-            ab2.start();
-            aStackProbers[2].start();
-            rb2.start();
-            ab3.start();
-            aStackProbers[3].start();
-            rb3.start();
+			/*
+			 * Twist 'em all
+			 */
+			ab1.start();
+			aStackProbers[0].start();
+			rb1.start();
+			aStackProbers[1].start();
+			ab2.start();
+			aStackProbers[2].start();
+			rb2.start();
+			ab3.start();
+			aStackProbers[3].start();
+			rb3.start();
 
-            System.out.println("main(): All the threads are ready.");
+			System.out.println("main(): All the threads are ready.");
 
-            /*
-             * Wait by here for all forked threads to die
-             */
-            ab1.join();
-            ab2.join();
-            ab3.join();
+			/*
+			 * Wait by here for all forked threads to die
+			 */
+			ab1.join();
+			ab2.join();
+			ab3.join();
 
-            rb1.join();
-            rb2.join();
-            rb3.join();
+			rb1.join();
+			rb2.join();
+			rb3.join();
 
-            for (int i = 0; i < NUM_PROBERS; i++)
-                aStackProbers[i].join();
+			for (int i = 0; i < NUM_PROBERS; i++)
+				aStackProbers[i].join();
 
-            // Some final stats after all the child threads terminated...
-            System.out.println("System terminates normally.");
-            System.out.println("Final value of top = " + soStack.getITop() + ".");
-            System.out.println("Final value of stack top = " + soStack.pick() + ".");
-            System.out.println("Final value of stack top-1 = " + soStack.getAt(soStack.getITop() - 1) + ".");
-            System.out.println("Stack access count = " + soStack.getAccessCounter());
+			// Some final stats after all the child threads terminated...
+			System.out.println("System terminates normally.");
+			System.out.println("Final value of top = " + soStack.getITop() + ".");
+			System.out.println("Final value of stack top = " + soStack.pick() + ".");
+			System.out.println("Final value of stack top-1 = " + soStack.getAt(soStack.getITop() - 1) + ".");
+			System.out.println("Stack access count = " + soStack.getAccessCounter());
 
-            System.exit(0);
-        }
+			System.exit(0);
+		}
 		catch(EmptyStackException e)
-        {
-            System.err.println("Caught EmptyStackException: " + e.getMessage());
-            System.exit(1);
-        }
+		{
+			System.err.println("Caught EmptyStackException: " + e.getMessage());
+			System.exit(1);
+		}
 		catch(OutOfBoundsStackIndexException e)
-        {
-            System.err.println("Caught OutOfBoundsStackIndexException: " + e.getMessage());
-            System.exit(1);
-        }
+		{
+			System.err.println("Caught OutOfBoundsStackIndexException: " + e.getMessage());
+			System.exit(1);
+		}
 		catch(InterruptedException e)
 		{
 			System.err.println("Caught InterruptedException (internal error): " + e.getMessage());
@@ -180,20 +180,22 @@ public class BlockManager
 	{
 		/**
 		 * A copy of a block returned by pop().
-                 * @see BlockStack#pop()
+		 * @see BlockStack#pop()
 		 */
 		private char cCopy;
 
 		public void run()
 		{
-			// When executing Phase 1, only one thread should be operational at a time, thus we need to acquire the mutex.
-			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
-			// This is because we execute operations on the stack, which is a critical section.
-		    mutex.P();
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] starts executing.");
 
 
 			phase1();
+
+			// The following try catch block contains operations that access and modify the stack, which is a shared
+			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
+			// to guarantee mutual exclusivity.
+			mutex.P();
+
 			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
 			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
 			// Phase 2 right until the moment the very last remaining thread (in this case thread 10th) finishes
@@ -204,7 +206,8 @@ public class BlockManager
 			// semaphore s1. The following conditional checks for that and notifies the user of such accomplishment.
 			if (!s1.isLocked())
 			{
-				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads + " threads have finished executing Phase 1 successfully!!!");
+				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads +
+						" threads have finished executing Phase 1 successfully!!!");
 			}
 
 			try
@@ -214,29 +217,29 @@ public class BlockManager
 				this.cCopy = soStack.pop();
 
 				System.out.println
-				(
-					"AcquireBlock thread [TID=" + this.iTID + "] has obtained Ms block " + this.cCopy +
-					" from position " + (soStack.getITop() + 1) + "."
-				);
+						(
+								"AcquireBlock thread [TID=" + this.iTID + "] has obtained Ms block " + this.cCopy +
+										" from position " + (soStack.getITop() + 1) + "."
+						);
 
 
 				System.out.println
-				(
-					"Acq[TID=" + this.iTID + "]: Current value of top = " +
-					soStack.getITop() + "."
-				);
+						(
+								"Acq[TID=" + this.iTID + "]: Current value of top = " +
+										soStack.getITop() + "."
+						);
 
 				System.out.println
-				(
-					"Acq[TID=" + this.iTID + "]: Current value of stack top = " +
-					soStack.pick() + "."
-				);
+						(
+								"Acq[TID=" + this.iTID + "]: Current value of stack top = " +
+										soStack.pick() + "."
+						);
 			}
 			catch(EmptyStackException e)
-            {
-                System.err.println("Caught EmptyStackException: " + e.getMessage());
-                System.exit(1);
-            }
+			{
+				System.err.println("Caught EmptyStackException: " + e.getMessage());
+				System.exit(1);
+			}
 			catch(Exception e)
 			{
 				reportException(e);
@@ -244,19 +247,16 @@ public class BlockManager
 			}
 			finally {
 				// In all cases, even if some exceptions occur, we make sure to release the mutex we acquired.
-			    mutex.V();
-            }
+				mutex.V();
+			}
 
 			// The following line forces all threads to wait until every single thread has finished executing Phase 1
-			// before starting to execute Phase 2. Phase 2 will only be able to be executed once the value of s1
+			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
+			// Phase 2 will only be able to be executed once the value of s1
 			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
-			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
-			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
-			// the Phase 2 operations and thus prevent race condition.
-			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			phase2();
 			s1.V();
+			phase2();
 
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] terminates.");
 		}
@@ -275,14 +275,16 @@ public class BlockManager
 
 		public void run()
 		{
-			// When executing Phase 1, only one thread should be operational at a time, thus we need to acquire the mutex.
-			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
-			// This is because we execute operations on the stack, which is a critical section.
-			mutex.P();
 			System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] starts executing.");
 
 
 			phase1();
+
+			// The following try catch block contains operations that access and modify the stack, which is a shared
+			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
+			// to guarantee mutual exclusivity.
+			mutex.P();
+
 			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
 			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
 			// Phase 2 right until the moment the very last remaining thread (in this case thread 10th) finishes
@@ -293,7 +295,8 @@ public class BlockManager
 			// semaphore s1. The following conditional checks for that and notifies the user of such accomplishment.
 			if (!s1.isLocked())
 			{
-				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads + " threads have finished executing Phase 1 successfully!!!");
+				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads +
+						" threads have finished executing Phase 1 successfully!!!");
 			}
 
 			try
@@ -303,35 +306,35 @@ public class BlockManager
 
 
 				System.out.println
-				(
-					"ReleaseBlock thread [TID=" + this.iTID + "] returns Ms block " + this.cBlock +
-					" to position " + (soStack.getITop() + 1) + "."
-				);
+						(
+								"ReleaseBlock thread [TID=" + this.iTID + "] returns Ms block " + this.cBlock +
+										" to position " + (soStack.getITop() + 1) + "."
+						);
 
 				soStack.push(this.cBlock);
 
 				System.out.println
-				(
-					"Rel[TID=" + this.iTID + "]: Current value of top = " +
-					soStack.getITop() + "."
-				);
+						(
+								"Rel[TID=" + this.iTID + "]: Current value of top = " +
+										soStack.getITop() + "."
+						);
 
 				System.out.println
-				(
-					"Rel[TID=" + this.iTID + "]: Current value of stack top = " +
-					soStack.pick() + "."
-				);
+						(
+								"Rel[TID=" + this.iTID + "]: Current value of stack top = " +
+										soStack.pick() + "."
+						);
 			}
-            catch(FullStackException e)
-            {
-                System.err.println("Caught FullStackException: " + e.getMessage());
-                System.exit(1);
-            }
+			catch(FullStackException e)
+			{
+				System.err.println("Caught FullStackException: " + e.getMessage());
+				System.exit(1);
+			}
 			catch(EmptyStackException e)
-            {
-                System.err.println("Caught EmptyStackException: " + e.getMessage());
-                System.exit(1);
-            }
+			{
+				System.err.println("Caught EmptyStackException: " + e.getMessage());
+				System.exit(1);
+			}
 			catch(Exception e)
 			{
 				reportException(e);
@@ -343,16 +346,12 @@ public class BlockManager
 			}
 
 			// The following line forces all threads to wait until every single thread has finished executing Phase 1
-			// before starting to execute Phase 2. Phase 2 will only be able to be executed once the value of s1
+			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
+			// Phase 2 will only be able to be executed once the value of s1
 			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
-			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
-			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
-			// the Phase 2 operations and thus prevent race condition.
-			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			phase2();
 			s1.V();
-
+			phase2();
 
 			System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] terminates.");
 		}
@@ -366,16 +365,17 @@ public class BlockManager
 	{
 		public void run()
 		{
-			// When executing Phase 1, only one thread should be operational at a time, thus we need to acquire the mutex.
-			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
-			// This is because we execute operations on the stack, which is a critical section.
-			mutex.P();
 
 			// When dumping stack contents,
 			// only one thread should be operational at a time, thus we need to acquire the mutex.
 			// This is because we execute operations on the stack, which should be mutually exclusive.
 			// (Since the stack is a critical section.)
 			phase1();
+
+			// The following try catch block contains operations that access and modify the stack, which is a shared
+			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
+			// to guarantee mutual exclusivity.
+			mutex.P();
 
 			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
 			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
@@ -386,7 +386,8 @@ public class BlockManager
 			// semaphore s1. The following conditional checks for that and notifies the user of such accomplishment.
 			if (!s1.isLocked())
 			{
-				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads + " threads have finished executing Phase 1 successfully!!!");
+				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads +
+						" threads have finished executing Phase 1 successfully!!!");
 			}
 
 			try
@@ -399,21 +400,21 @@ public class BlockManager
 					// (s) - current top of the stack
 					for(int s = 0; s < soStack.getISize(); s++)
 						System.out.print
-						(
-							(s == BlockManager.soStack.getITop() ? "(" : "[") +
-							BlockManager.soStack.getAt(s) +
-							(s == BlockManager.soStack.getITop() ? ")" : "]")
-						);
+								(
+										(s == BlockManager.soStack.getITop() ? "(" : "[") +
+												BlockManager.soStack.getAt(s) +
+												(s == BlockManager.soStack.getITop() ? ")" : "]")
+								);
 
 					System.out.println(".");
 
 				}
 			}
-            catch(OutOfBoundsStackIndexException e)
-            {
-                System.err.println("Caught OutOfBoundsStackIndexException: " + e.getMessage());
-                System.exit(1);
-            }
+			catch(OutOfBoundsStackIndexException e)
+			{
+				System.err.println("Caught OutOfBoundsStackIndexException: " + e.getMessage());
+				System.exit(1);
+			}
 			catch(Exception e)
 			{
 				reportException(e);
@@ -425,16 +426,12 @@ public class BlockManager
 			}
 
 			// The following line forces all threads to wait until every single thread has finished executing Phase 1
-			// before starting to execute Phase 2. Phase 2 will only be able to be executed once the value of s1
+			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
+			// Phase 2 will only be able to be executed once the value of s1
 			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
-			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
-			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
-			// the Phase 2 operations and thus prevent race condition.
-			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			phase2();
 			s1.V();
-
+			phase2();
 		}
 	} // class CharStackProber
 
