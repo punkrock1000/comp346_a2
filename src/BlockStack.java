@@ -99,7 +99,7 @@ class BlockStack
 	public char getAt(final int piPosition)
 		throws OutOfBoundsStackIndexException
 	{
-		if (piPosition < 0 || piPosition > this.iSize)
+		if (piPosition < 0 || piPosition >= this.iSize)
 			throw new OutOfBoundsStackIndexException();
 		this.accessCounter++;
 		return this.acStack[piPosition];
