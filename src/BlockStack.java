@@ -54,6 +54,7 @@ class BlockStack
 
 	/**
 	 * Supplied size
+	 * @throws InvalidStackSizeException
 	 */
 	public BlockStack(final int piSize)
         throws InvalidStackSizeException
@@ -79,6 +80,7 @@ class BlockStack
 	/**
 	 * Picks a value from the top without modifying the stack
 	 * @return top element of the stack, char
+	 * @throws EmptyStackException
 	 */
 	public char pick()
 		throws EmptyStackException
@@ -92,6 +94,7 @@ class BlockStack
 	/**
 	 * Returns arbitrary value from the stack array
 	 * @return the element, char
+	 * @throws OutOfBoundsStackIndexException
 	 */
 	public char getAt(final int piPosition)
 		throws OutOfBoundsStackIndexException
@@ -104,6 +107,7 @@ class BlockStack
 
 	/**
 	 * Standard push operation
+	 * @throws EmptyStackException
 	 */
 	public void push(final char pcBlock)
         throws FullStackException
@@ -123,6 +127,7 @@ class BlockStack
 	/**
 	 * Standard pop operation
 	 * @return ex-top element of the stack, char
+	 * @throws EmptyStackException
 	 */
 	public char pop()
         throws EmptyStackException
@@ -155,19 +160,36 @@ class BlockStack
     }
 
 	/*------- Accessor Methods -------*/
+	/**
+	 * @return Index of the element currently on top of the stack
+	 */
 	public int getITop()
 	{
 		return iTop;
 	}
 
+	/**
+	 * @return Current size of the stack
+	 */
 	public int getISize()
 	{
 		return iSize;
 	}
 
+	/**
+	 * @return accessCounter, that counts the number of times stack has been accessed since we started execution.
+	 */
 	public int getAccessCounter()
 	{
 		return accessCounter;
+	}
+
+	/**
+	 * @return the stack itself (implemented as a 1-dimensional array of characters)
+	 */
+	public char[] getAcStack()
+	{
+		return acStack;
 	}
 }
 
