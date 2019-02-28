@@ -36,6 +36,13 @@ public class BlockManager
 	 */
 	private static Semaphore mutex = new Semaphore(1);
 
+	/**
+	 * For phase 1, we need to know how many threads will be created.
+	 */
+	private static final int NUM_ACQUIRE_BLOCK_THREADS = 3;
+	private static final int NUM_RELEASE_BLOCK_THREADS = 3;
+	private static int nbrTotalThreads = NUM_ACQUIRE_BLOCK_THREADS + NUM_RELEASE_BLOCK_THREADS + NUM_PROBERS;
+
 	/*
 	 * For synchronization
 	 */
@@ -43,7 +50,7 @@ public class BlockManager
 	/**
 	 * s1 is to make sure phase I for all is done before any phase II begins
 	 */
-	//private static Semaphore s1 = new Semaphore(...);
+	private static Semaphore s1 = new Semaphore(-nbrTotalThreads + 1);
 
 	/**
 	 * s2 is for use in conjunction with Thread.turnTestAndSet() for phase II proceed
@@ -172,7 +179,7 @@ public class BlockManager
 
 
 			phase1();
-
+			s1.V();
 
 			try
 			{
@@ -214,6 +221,8 @@ public class BlockManager
 			    mutex.V();
             }
 
+			s1.P();
+			s1.V();
 			phase2();
 
 
@@ -242,7 +251,7 @@ public class BlockManager
 
 
 			phase1();
-
+			s1.V();
 
 			try
 			{
@@ -290,7 +299,8 @@ public class BlockManager
 				mutex.V();
 			}
 
-
+			s1.P();
+			s1.V();
 			phase2();
 
 
@@ -311,7 +321,7 @@ public class BlockManager
 			// This is because we execute operations on the stack, which should be mutually exclusive.
 			// (Since the stack is a critical section.)
 			phase1();
-
+			s1.V();
 
 			try
 			{
@@ -348,7 +358,8 @@ public class BlockManager
 				mutex.V();
 			}
 
-
+			s1.P();
+			s1.V();
 			phase2();
 
 		}
