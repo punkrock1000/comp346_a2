@@ -34,7 +34,7 @@ public class BlockManager
 	/**
 	 * For atomicity
 	 */
-	//private static Semaphore mutex = new Semaphore(...);
+	private static Semaphore mutex = new Semaphore(1);
 
 	/*
 	 * For synchronization
@@ -164,6 +164,7 @@ public class BlockManager
 
 		public void run()
 		{
+		    mutex.P();
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] starts executing.");
 
 
@@ -205,6 +206,9 @@ public class BlockManager
 				reportException(e);
 				System.exit(1);
 			}
+			finally {
+			    mutex.V();
+            }
 
 			phase2();
 
