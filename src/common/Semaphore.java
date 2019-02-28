@@ -62,7 +62,7 @@ public class Semaphore
 	 */
 
 	/**
-	 * Puts thread asleep if semamphore's values is less than or equal to zero.
+	 * Puts thread asleep if semaphore's values is less than or equal to zero.
 	 *
 	 * NOTE: This implementation as-is does not allow semaphore's value
 	 * to become negative.

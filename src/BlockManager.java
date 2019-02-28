@@ -59,11 +59,16 @@ public class BlockManager
 	/**
 	 * Semaphore s1 is necessary to make sure that all threads have finished executing their phase I
 	 * before phase II starts executing for any threads.
-	 * To ensure that, we initialize s1 to the negative value of the total number of threads incremented by 1.
+	 * To ensure that, we initialize s1 to the negative value of the total number of threads, incremented by 1.
 	 * Thus, all threads will subsequently be forced to wait until the value of s1 becomes positive,
 	 * which will only happen when all threads have finished executing Phase 1.
 	 * In that way, as soon as the last thread (10th one here) has finished executing Phase 1,
 	 * the value of s1 will be 1, allowing any thread to enter/start executing phase 2.
+	 *
+	 * NOTE: While initializing a semaphore to a negative value is not standard/desirable
+	 * in the classical definition of semaphores, it is sometimes the most practical way
+	 * to solve a synchronization problem. Here, we avoid the overhead of creating/deallocating/handling
+	 * one semaphore per thread by instead only using one for all threads. Solution looks more elegant that way.
 	 */
 	private static Semaphore s1 = new Semaphore(-nbrTotalThreads + 1);
 
@@ -189,12 +194,14 @@ public class BlockManager
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] starts executing.");
 
 
-			phase1();
-
-			// The following try catch block contains operations that access and modify the stack, which is a shared
-			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
-			// to guarantee mutual exclusivity.
+			// When executing Phase 1, only one thread should be operational at a time,
+			// thus we need to acquire the mutex.
+			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
+			// This is because we execute operations on the stack, which is a critical section.
+			// Furthermore, a thread should not be able to execute Phase 1 while another execute Phase 2 and vice versa.
+			// This is because both phases access the same critical section (the stack).
 			mutex.P();
+			phase1();
 
 			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
 			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
@@ -209,7 +216,14 @@ public class BlockManager
 				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads +
 						" threads have finished executing Phase 1 successfully!!!");
 			}
+			mutex.V();
 
+			// The following try catch block contains operations that access and modify the stack, which is a shared
+			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
+			// to guarantee mutual exclusivity.
+			// Furthermore, we cannot isolate specific statements that modifies/accesses the stack for better
+			// performance, since we have to make sure the mutex is successfully acquired and released.
+			mutex.P();
 			try
 			{
 				System.out.println("AcquireBlock thread [TID=" + this.iTID + "] requests Ms block.");
@@ -252,11 +266,15 @@ public class BlockManager
 
 			// The following line forces all threads to wait until every single thread has finished executing Phase 1
 			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
-			// Phase 2 will only be able to be executed once the value of s1
-			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
+			// Phase 2 will only be able to be executed once the value of s1 becomes strictly positive.
+			// Once that happens, all threads should be able to start executing Phase 2.
+			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
+			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
+			// the Phase 2 operations and thus prevent race condition.
+			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			s1.V();
 			phase2();
+			s1.V();
 
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] terminates.");
 		}
@@ -278,12 +296,14 @@ public class BlockManager
 			System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] starts executing.");
 
 
-			phase1();
-
-			// The following try catch block contains operations that access and modify the stack, which is a shared
-			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
-			// to guarantee mutual exclusivity.
+			// When executing Phase 1, only one thread should be operational at a time,
+			// thus we need to acquire the mutex.
+			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
+			// This is because we execute operations on the stack, which is a critical section.
+			// Furthermore, a thread should not be able to execute Phase 1 while another execute Phase 2 and vice versa.
+			// This is because both phases access the same critical section (the stack).
 			mutex.P();
+			phase1();
 
 			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
 			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
@@ -298,7 +318,14 @@ public class BlockManager
 				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads +
 						" threads have finished executing Phase 1 successfully!!!");
 			}
+			mutex.V();
 
+			// The following try catch block contains operations that access and modify the stack, which is a shared
+			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
+			// to guarantee mutual exclusivity.
+			// Furthermore, we cannot isolate specific statements that modifies/accesses the stack for better
+			// performance, since we have to make sure the mutex is successfully acquired and released.
+			mutex.P();
 			try
 			{
 				if(soStack.isEmpty() == false)
@@ -347,11 +374,15 @@ public class BlockManager
 
 			// The following line forces all threads to wait until every single thread has finished executing Phase 1
 			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
-			// Phase 2 will only be able to be executed once the value of s1
-			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
+			// Phase 2 will only be able to be executed once the value of s1 becomes strictly positive.
+			// Once that happens, all threads should be able to start executing Phase 2.
+			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
+			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
+			// the Phase 2 operations and thus prevent race condition.
+			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			s1.V();
 			phase2();
+			s1.V();
 
 			System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] terminates.");
 		}
@@ -366,16 +397,14 @@ public class BlockManager
 		public void run()
 		{
 
-			// When dumping stack contents,
-			// only one thread should be operational at a time, thus we need to acquire the mutex.
-			// This is because we execute operations on the stack, which should be mutually exclusive.
-			// (Since the stack is a critical section.)
-			phase1();
-
-			// The following try catch block contains operations that access and modify the stack, which is a shared
-			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
-			// to guarantee mutual exclusivity.
+			// When executing Phase 1, only one thread should be operational at a time,
+			// thus we need to acquire the mutex.
+			// Phase 1 should act as an atomic operation and thus we have to guarantee mutual exclusivity.
+			// This is because we execute operations on the stack, which is a critical section.
+			// Furthermore, a thread should not be able to execute Phase 1 while another execute Phase 2 and vice versa.
+			// This is because both phases access the same critical section (the stack).
 			mutex.P();
+			phase1();
 
 			// s1 is initialized to -nbrTotalThreads + 1, (which in this specific case is -9). Thus, after a thread
 			// completes Phase 1, we increment that value. It will stay negative, preventing any thread to enter
@@ -389,7 +418,14 @@ public class BlockManager
 				System.out.println("READY FOR PHASE 2 => All " + nbrTotalThreads +
 						" threads have finished executing Phase 1 successfully!!!");
 			}
+			mutex.V();
 
+			// The following try catch block contains operations that access and modify the stack, which is a shared
+			// resource and more importantly a critical section that needs to be protected. Thus, we use the mutex
+			// to guarantee mutual exclusivity.
+			// Furthermore, we cannot isolate specific statements that modifies/accesses the stack for better
+			// performance, since we have to make sure the mutex is successfully acquired and released.
+			mutex.P();
 			try
 			{
 				for(int i = 0; i < siThreadSteps; i++)
@@ -427,11 +463,15 @@ public class BlockManager
 
 			// The following line forces all threads to wait until every single thread has finished executing Phase 1
 			// before starting to execute Phase 2 (assuming s1 has been initialized to -totalNbrThreads + 1).
-			// Phase 2 will only be able to be executed once the value of s1
-			// becomes strictly positive. Once that happens, all threads should be able to start executing Phase 2.
+			// Phase 2 will only be able to be executed once the value of s1 becomes strictly positive.
+			// Once that happens, all threads should be able to start executing Phase 2.
+			// Furthermore, now that we guaranteed that no thread could still be executing Phase 1 when any thread
+			// starts executing phase 2, we can use s1 (instead of mutex) to guarantee mutual exclusivity of
+			// the Phase 2 operations and thus prevent race condition.
+			// This reduces the overhead of having to use both s1 and mutex for Phase 2.
 			s1.P();
-			s1.V();
 			phase2();
+			s1.V();
 		}
 	} // class CharStackProber
 
