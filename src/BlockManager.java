@@ -164,6 +164,9 @@ public class BlockManager
 
 		public void run()
 		{
+			// When acquiring block, only one thread should be operational at a time, thus we need to acquire the mutex.
+			// This is because we execute operations on the stack, which should be mutually exclusive.
+			// (Since the stack is a critical section.)
 		    mutex.P();
 			System.out.println("AcquireBlock thread [TID=" + this.iTID + "] starts executing.");
 
@@ -207,6 +210,7 @@ public class BlockManager
 				System.exit(1);
 			}
 			finally {
+				// In all cases, even if some exceptions occur, we make sure to release the mutex we acquired.
 			    mutex.V();
             }
 
@@ -230,6 +234,10 @@ public class BlockManager
 
 		public void run()
 		{
+			// When releasing block, only one thread should be operational at a time, thus we need to acquire the mutex.
+			// This is because we execute operations on the stack, which should be mutually exclusive.
+			// (Since the stack is a critical section.)
+			mutex.P();
 			System.out.println("ReleaseBlock thread [TID=" + this.iTID + "] starts executing.");
 
 
@@ -277,6 +285,10 @@ public class BlockManager
 				reportException(e);
 				System.exit(1);
 			}
+			finally {
+				// In all cases, even if some exceptions occur, we make sure to release the mutex we acquired.
+				mutex.V();
+			}
 
 
 			phase2();
@@ -294,6 +306,10 @@ public class BlockManager
 	{
 		public void run()
 		{
+			// When dumping stack contents,
+			// only one thread should be operational at a time, thus we need to acquire the mutex.
+			// This is because we execute operations on the stack, which should be mutually exclusive.
+			// (Since the stack is a critical section.)
 			phase1();
 
 
@@ -326,6 +342,10 @@ public class BlockManager
 			{
 				reportException(e);
 				System.exit(1);
+			}
+			finally {
+				// In all cases, even if some exceptions occur, we make sure to release the mutex we acquired.
+				mutex.V();
 			}
 
 
